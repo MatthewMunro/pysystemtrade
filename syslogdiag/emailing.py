@@ -64,7 +64,7 @@ def _send_msg(msg):
 
     """
 
-    email_server, email_address, email_pwd = get_email_details()
+    email_server, email_address, email_pwd, email_port = get_email_details()
 
     me = email_address
     you = email_address
@@ -73,18 +73,22 @@ def _send_msg(msg):
 
     # Send the message via our own SMTP server, but don't include the
     # envelope header.
-    s = smtplib.SMTP(email_server, 587)
+    s = smtplib.SMTP(email_server, email_port)
     s.login(email_address, email_pwd)
     s.sendmail(me, [you], msg.as_string())
     s.quit()
 
 
 def get_email_details():
-    yaml_dict = get_list_of_private_config_values(['email_address', 'email_pwd', 'email_server'])
+    yaml_dict = get_list_of_private_config_values(['email_address', 'email_pwd', 'email_server', 'email_port'])
 
     email_address = yaml_dict['email_address']
     email_pwd = yaml_dict['email_pwd']
     email_server = yaml_dict['email_server']
+    email_port = yaml_dict['email_port']
 
-    return email_server, email_address, email_pwd
+    return email_server, email_address, email_pwd, email_port
 
+
+if __name__ == "__main__":
+    send_mail_msg("testing", "test subject")
