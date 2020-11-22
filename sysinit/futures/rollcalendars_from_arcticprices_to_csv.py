@@ -2,10 +2,8 @@ from sysdata.arctic.arctic_futures_per_contract_prices import (
     arcticFuturesContractPriceData,
 )
 from sysdata.mongodb.mongo_roll_data import mongoRollParametersData
-from sysdata.futures.roll_calendars import rollCalendar
+from sysobjects.roll_calendars import rollCalendar
 from sysdata.csv.csv_roll_calendars import csvRollCalendarData
-
-import sys
 
 """
 Generate a 'best guess' roll calendar based on some price data for individual contracts
@@ -35,10 +33,10 @@ def build_and_write_roll_calendar(
     )
 
     # checks - this might fail
-    check_monotonic = roll_calendar.check_if_date_index_monotonic()
+    assert roll_calendar.check_if_date_index_monotonic()
 
     # this should never fail
-    check_valid = roll_calendar.check_dates_are_valid_for_prices(
+    assert roll_calendar.check_dates_are_valid_for_prices(
         dict_of_futures_contract_prices
     )
 
@@ -53,9 +51,7 @@ def build_and_write_roll_calendar(
         check_happy_to_write = "yes"
 
     if check_happy_to_write == "yes":
-        csv_roll_calendars.add_roll_calendar(
-            roll_calendar, instrument_code, ignore_duplication=True
-        )
+        csv_roll_calendars.add_roll_calendar(instrument_code, roll_calendar, ignore_duplication=True)
     else:
         print("Not writing")
 

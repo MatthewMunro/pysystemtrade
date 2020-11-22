@@ -4,7 +4,7 @@ Represent contract dates and expiries
 
 import datetime
 
-from syscore.dateutils import contract_month_from_number
+from syscore.dateutils import contract_month_from_number, month_from_contract_letter
 from syscore.genutils import list_of_items_seperated_by_underscores
 
 NO_EXPIRY_DATE_PASSED = ""
@@ -50,7 +50,6 @@ class expiryDate(datetime.datetime):
 
     def as_str(self) ->str:
         return self.strftime(EXPIRY_DATE_FORMAT)
-
 
 class singleContractDate(object):
     """
@@ -104,13 +103,13 @@ class singleContractDate(object):
 
 
     def __repr__(self):
-        return self.date
+        return self.date_str
 
     def __eq__(self, other):
         return self.expiry_date == other.expiry_date
 
     @property
-    def date(self):
+    def date_str(self):
         return self._date_str
 
     def _init_with_yymm(self, date_str:str):
@@ -151,7 +150,7 @@ class singleContractDate(object):
     def _get_expiry_date_from_approx_expiry(self, approx_expiry_offset):
         # guess from the contract date - we can always correct this later
 
-        approx_expiry_date = self._as_date()
+        approx_expiry_date = self.as_date()
         new_expiry_date = approx_expiry_date + datetime.timedelta(
             days=approx_expiry_offset
         )
@@ -206,16 +205,16 @@ class singleContractDate(object):
             expiry_date=expiry_date)
 
     def year(self):
-        return int(self.date[YEAR_SLICE])
+        return int(self.date_str[YEAR_SLICE])
 
     def month(self):
-        return int(self.date[MONTH_SLICE])
+        return int(self.date_str[MONTH_SLICE])
 
     def day(self):
         if not self.is_day_defined():
             return 0
 
-        return int(self.date[DAY_SLICE])
+        return int(self.date_str[DAY_SLICE])
 
     def is_day_defined(self):
         if self.only_has_month:
@@ -226,7 +225,13 @@ class singleContractDate(object):
     def letter_month(self):
         return contract_month_from_number(self.month())
 
-    def _as_date(self):
+    def date_str_to_year_month(self) -> (int, str):
+        current_month_str = self.letter_month()
+        current_year_int = self.year()
+
+        return current_year_int, current_month_str
+
+    def as_date(self):
 
         tuple_of_dates = self._as_date_tuple()
 
@@ -243,9 +248,9 @@ class singleContractDate(object):
     def _date_str_with_no_trailing_zeros(self):
         if self.only_has_month:
             # remove trailing zeros
-            date_str = self.date[YYYYMM_SLICE]
+            date_str = self.date_str[YYYYMM_SLICE]
         else:
-            date_str = self.date
+            date_str = self.date_str
 
         return date_str
 
@@ -328,7 +333,7 @@ class contractDate(object):
 
     @property
     def key(self):
-        return self.date
+        return self.date_str
 
     @property
     def is_spread_contract(self):
@@ -360,9 +365,12 @@ class contractDate(object):
         return self.first_contract.expiry_date
 
     @property
-    def date(self):
-        return "_".join([str(x) for x in self.list_of_single_contract_dates])
+    def date_str(self):
+        return "_".join([x.date_str for x in self.list_of_single_contract_dates])
 
+    @property
+    def date_str_to_year_month(self):
+        return  self.first_contract.date_str_to_year_month
 
     # not using a setter as shouldn't be done casually
     def update_expiry_date(self, expiry_date: expiryDate):
@@ -397,6 +405,14 @@ class contractDate(object):
 
     def letter_month(self):
         return self.first_contract.letter_month()
+
+class listOfContractDateStr(list):
+    def sorted_date_str(self):
+        return listOfContractDateStr(sorted(self))
+
+    def final_date_str(self):
+        return self.sorted_date_str()[-1]
+
 
 def resolve_date_string_into_list_of_single_contract_dates(date_str, expiry_date=NO_EXPIRY_DATE_PASSED, approx_expiry_offset=0) -> list:
     if type(date_str) is dict:
@@ -491,3 +507,15 @@ def create_contract_date_from_old_style_dict(contractDate, results_dict: dict):
     return contractDate(
         contract_id,
         expiry_date=expiry_date)
+
+
+def contract_given_tuple(contract_date: contractDate, year_value:int, month_str: str):
+    if contract_date.only_has_month:
+        new_day_number = 0
+    else:
+        new_day_number = contract_date.day()
+
+    month_int = month_from_contract_letter(month_str)
+    date_str = from_contract_numbers_to_contract_string(year_value, month_int, new_day_number)
+
+    return contractDate(date_str)

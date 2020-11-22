@@ -1,7 +1,7 @@
 from sysdata.futures.multiple_prices import (
     futuresMultiplePricesData,
-    futuresMultiplePrices,
 )
+from sysobjects.multiple_prices import futuresMultiplePrices
 
 from syscore.fileutils import get_filename_for_package, files_with_extension_in_pathname
 from syscore.pdutils import pd_readcsv
@@ -21,13 +21,13 @@ class csvFuturesMultiplePricesData(futuresMultiplePricesData):
     def __init__(self, datapath=None, log=logtoscreen(
             "csvFuturesMultiplePricesData")):
 
-        super().__init__()
+        super().__init__(log=log)
 
         if datapath is None:
             datapath = CSV_MULTIPLE_PRICE_DIRECTORY
 
         self._datapath = datapath
-        self.log = log
+
 
     def __repr__(self):
         return "csvFuturesMultiplePricesData accessing %s" % self._datapath

@@ -6,7 +6,7 @@ from copy import copy
 from ib_insync import Forex, util, ComboLeg
 from ib_insync.order import MarketOrder, LimitOrder
 
-from sysdata.fx.spotfx import currencyValue
+from sysobjects.spot_fx_prices import currencyValue
 
 from syscore.objects import missing_contract, arg_not_supplied, missing_order
 from syscore.genutils import list_of_ints_with_highest_common_factor_positive_first
@@ -15,11 +15,10 @@ from syslogdiag.log import logtoscreen
 
 from sysbrokers.IB.ib_trading_hours import get_trading_hours
 from sysbrokers.IB.ib_contracts import (
-    ib_futures_instrument,
-    resolve_multiple_expiries,
-    ib_futures_instrument_just_symbol,
-    futuresInstrumentWithIBData
+    resolve_multiple_expiries
 )
+from sysbrokers.IB.ib_instruments import ib_futures_instrument_just_symbol, futuresInstrumentWithIBConfigData, \
+    ib_futures_instrument
 from sysbrokers.IB.ib_positions import (
     from_ib_positions_to_dict,
     resolveBS,
@@ -131,7 +130,7 @@ class ibClient(object):
         return dict_of_positions
 
     def broker_get_futures_contract_list(
-            self, futures_instrument_with_ib_data: futuresInstrumentWithIBData):
+            self, futures_instrument_with_ib_data: futuresInstrumentWithIBConfigData):
 
         specific_log = self.log.setup(
             instrument_code=futures_instrument_with_ib_data.instrument_code
@@ -224,7 +223,7 @@ class ibClient(object):
 
         specific_log = self.log.setup(
             instrument_code=contract_object_with_ib_broker_config.instrument_code,
-            contract_date=contract_object_with_ib_broker_config.date,
+            contract_date=contract_object_with_ib_broker_config.date_str,
         )
 
         ibcontract = self.ib_futures_contract(
@@ -299,7 +298,7 @@ class ibClient(object):
         return account_summary_dict[account_id]["NetLiquidation"]
 
     def broker_get_contract_expiry_date(
-            self, contract_object_with_ib_data):
+            self, contract_object_with_ib_data) -> str:
         """
         Return the exact expiry date for a given contract
 
@@ -308,7 +307,7 @@ class ibClient(object):
         """
         specific_log = self.log.setup(
             instrument_code=contract_object_with_ib_data.instrument_code,
-            contract_date=contract_object_with_ib_data.date,
+            contract_date=contract_object_with_ib_data.date_str,
         )
 
         ibcontract = self.ib_futures_contract(
@@ -349,7 +348,7 @@ class ibClient(object):
 
         specific_log = self.log.setup(
             instrument_code=contract_object_with_ib_data.instrument_code,
-            contract_date=contract_object_with_ib_data.date,
+            contract_date=contract_object_with_ib_data.date_str,
         )
 
         ibcontract = self.ib_futures_contract(
@@ -378,7 +377,7 @@ class ibClient(object):
 
         specific_log = self.log.setup(
             instrument_code=contract_object_with_ib_data.instrument_code,
-            contract_date=contract_object_with_ib_data.date,
+            contract_date=contract_object_with_ib_data.date_str,
         )
 
         ibcontract = self.ib_futures_contract(
@@ -407,7 +406,7 @@ class ibClient(object):
         """
         specific_log = self.log.setup(
             instrument_code=contract_object_with_ib_data.instrument_code,
-            contract_date=contract_object_with_ib_data.date,
+            contract_date=contract_object_with_ib_data.date_str,
         )
         if contract_object_with_ib_data.is_spread_contract():
             raise Exception("Can't get historical data for combo")
@@ -549,15 +548,15 @@ class ibClient(object):
         if log is None:
             log = self.log
 
+        if ibcontract is missing_contract:
+            log.warn("Can't find price with valid IB contract")
+            return pd.Series()
+
         try:
             barSizeSetting, durationStr = get_barsize_and_duration_from_frequency(
                 bar_freq)
         except Exception as exception:
             log.warn(str(exception.args[0]))
-            return pd.Series()
-
-        if ibcontract is missing_contract:
-            log.warn("Can't find price with valid IB contract")
             return pd.Series()
 
         price_data_raw = self.ib_get_historical_data(
@@ -567,6 +566,10 @@ class ibClient(object):
             whatToShow=whatToShow,
             log=log,
         )
+
+        if price_data_raw is None:
+            log.warn("No price data from IB")
+            return pd.Series()
 
         price_data_as_df = price_data_raw[[
             "open", "high", "low", "close", "volume"]]
@@ -655,7 +658,7 @@ class ibClient(object):
         """
         contract_object_to_use = copy(contract_object_with_ib_data)
         if always_return_single_leg and contract_object_to_use.is_spread_contract():
-            contract_object_to_use = contract_object_to_use.new_contract_with_replaced_contract_date_object(contract_object_with_ib_data.date[0])
+            contract_object_to_use = contract_object_to_use.new_contract_with_replaced_contract_date_object(contract_object_with_ib_data.date_str[0])
 
         if getattr(self, "_futures_contract_cache", None) is None:
             self._futures_contract_cache = {}
@@ -703,7 +706,7 @@ class ibClient(object):
         if contract_object_with_ib_data.is_spread_contract():
             ibcontract, legs = self._get_spread_ib_futures_contract(
                 instrument_object_with_metadata,
-                contract_object_with_ib_data.date,
+                contract_object_with_ib_data.contract_date,
                 trade_list_for_multiple_legs=trade_list_for_multiple_legs,
             )
         else:
@@ -718,7 +721,7 @@ class ibClient(object):
         return ibcontract_with_legs
 
     def _get_vanilla_ib_futures_contract(
-        self, futures_instrument_with_ib_data: futuresInstrumentWithIBData, contract_date
+        self, futures_instrument_with_ib_data: futuresInstrumentWithIBConfigData, contract_date
     ):
         """
         Return a complete and unique IB contract that matches contract_object_with_ib_data
@@ -738,7 +741,7 @@ class ibClient(object):
         else:
             # Don't have the expiry so lose the days at the end so it's just
             # 'YYYYMM'
-            contract_date = str(contract_date)[:6]
+            contract_date = str(contract_date.date_str)[:6]
 
         ibcontract.lastTradeDateOrContractMonth = contract_date
 
@@ -772,8 +775,8 @@ class ibClient(object):
 
     def _get_spread_ib_futures_contract(
         self,
-        futures_instrument_with_ib_data: futuresInstrumentWithIBData,
-        list_of_contract_dates,
+        futures_instrument_with_ib_data: futuresInstrumentWithIBConfigData,
+        contract_date,
         trade_list_for_multiple_legs=[-1, 1],
     ):
         """
@@ -787,6 +790,7 @@ class ibClient(object):
         ibcontract = ib_futures_instrument(futures_instrument_with_ib_data)
         ibcontract.secType = "BAG"
 
+        list_of_contract_dates = contract_date.list_of_single_contract_dates
         resolved_legs = [
             self._get_vanilla_ib_futures_contract(
                 futures_instrument_with_ib_data, contract_date

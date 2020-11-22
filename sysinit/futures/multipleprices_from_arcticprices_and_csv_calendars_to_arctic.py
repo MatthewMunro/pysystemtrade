@@ -17,7 +17,7 @@ from sysdata.csv.csv_roll_calendars import csvRollCalendarData
 from sysdata.csv.csv_multiple_prices import csvFuturesMultiplePricesData
 from sysdata.arctic.arctic_multiple_prices import arcticFuturesMultiplePricesData
 
-from sysdata.futures.multiple_prices import futuresMultiplePrices
+from sysobjects.multiple_prices import futuresMultiplePrices
 
 
 def _get_data_inputs(csv_roll_data_path, csv_multiple_data_path):
@@ -47,7 +47,7 @@ def process_multiple_prices_all_instruments(
         _not_used2,
         _not_used3,
     ) = _get_data_inputs(csv_roll_data_path, csv_multiple_data_path)
-    instrument_list = arctic_individual_futures_prices.get_instruments_with_price_data()
+    instrument_list = arctic_individual_futures_prices.get_list_of_instrument_codes_with_price_data()
 
     for instrument_code in instrument_list:
         print(instrument_code)

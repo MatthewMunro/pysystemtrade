@@ -1,11 +1,9 @@
+from sysdata.base_data import baseData
+from syslogdiag.log import logtoscreen
+from sysobjects.rolls import rollParameters
 
-from sysdata.data import baseData
+USE_CHILD_CLASS_ROLL_PARAMS_ERROR = "You need to use a child class of rollParametersData"
 
-
-
-USE_CHILD_CLASS_ROLL_PARAMS_ERROR = (
-    "You need to use a child class of rollParametersData"
-)
 
 class rollParametersMissing(Exception):
     pass
@@ -18,28 +16,26 @@ class rollParametersData(baseData):
 
     """
 
+    def __init__(self, log=logtoscreen("futuresInstrumentData")):
+        super().__init__(log=log)
+
+
     def __repr__(self):
         return "rollParametersData base class - DO NOT USE"
 
     def keys(self):
         return self.get_list_of_instruments()
 
-    def get_list_of_instruments(self):
-        raise NotImplementedError(USE_CHILD_CLASS_ROLL_PARAMS_ERROR)
+    def __getitem__(self, instrument_code: str) -> rollParameters:
+        return self.get_roll_parameters(instrument_code)
 
-    def get_roll_parameters(self, instrument_code):
+    def get_roll_parameters(self, instrument_code:str) -> rollParameters:
         if self.is_code_in_data(instrument_code):
             return self._get_roll_parameters_without_checking(instrument_code)
         else:
             raise rollParametersMissing("Don't have parameters for %s" % instrument_code)
 
-    def _get_roll_parameters_without_checking(self, instrument_code):
-        raise NotImplementedError(USE_CHILD_CLASS_ROLL_PARAMS_ERROR)
-
-    def __getitem__(self, instrument_code):
-        return self.get_roll_parameters(instrument_code)
-
-    def delete_roll_parameters(self, instrument_code, are_you_sure=False):
+    def delete_roll_parameters(self, instrument_code:str, are_you_sure: bool=False):
         self.log.label(instrument_code=instrument_code)
 
         if are_you_sure:
@@ -60,19 +56,8 @@ class rollParametersData(baseData):
                 "You need to call delete_roll_parameters with a flag to be sure"
             )
 
-    def _delete_roll_parameters_data_without_any_warning_be_careful(
-            instrument_code):
-        raise NotImplementedError(USE_CHILD_CLASS_ROLL_PARAMS_ERROR)
-
-    def is_code_in_data(self, instrument_code):
-        if instrument_code in self.get_list_of_instruments():
-            return True
-        else:
-            return False
-
-    def add_roll_parameters(
-        self, roll_parameters, instrument_code, ignore_duplication=False
-    ):
+    def add_roll_parameters(self, instrument_code: str, roll_parameters: rollParameters,
+                            ignore_duplication: bool = False):
 
         self.log.label(instrument_code=instrument_code)
 
@@ -84,15 +69,29 @@ class rollParametersData(baseData):
                     "There is already %s in the data, you have to delete it first" %
                     instrument_code)
 
-        self._add_roll_parameters_without_checking_for_existing_entry(
-            roll_parameters, instrument_code
-        )
+        self._add_roll_parameters_without_checking_for_existing_entry(instrument_code, roll_parameters)
 
         self.log.terse(
             "Added roll parameters for instrument %s" %
             instrument_code)
 
-    def _add_roll_parameters_without_checking_for_existing_entry(
-        self, roll_parameters, instrument_code
-    ):
+
+    def is_code_in_data(self, instrument_code:str) -> bool:
+        if instrument_code in self.get_list_of_instruments():
+            return True
+        else:
+            return False
+
+    def _delete_roll_parameters_data_without_any_warning_be_careful(self,
+            instrument_code:str):
+        raise NotImplementedError(USE_CHILD_CLASS_ROLL_PARAMS_ERROR)
+
+    def _add_roll_parameters_without_checking_for_existing_entry(self, instrument_code: str,
+                                                                 roll_parameters: rollParameters):
+        raise NotImplementedError(USE_CHILD_CLASS_ROLL_PARAMS_ERROR)
+
+    def get_list_of_instruments(self) ->list:
+        raise NotImplementedError(USE_CHILD_CLASS_ROLL_PARAMS_ERROR)
+
+    def _get_roll_parameters_without_checking(self, instrument_code:str) -> rollParameters:
         raise NotImplementedError(USE_CHILD_CLASS_ROLL_PARAMS_ERROR)
