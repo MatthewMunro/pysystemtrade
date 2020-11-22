@@ -1,4 +1,5 @@
-#YAML
+---
+# YAML
 #
 # Raw data
 #
@@ -6,79 +7,79 @@
 #
 trading_rules:
   ewmac2_8:
-     function: systems.provided.futures_chapter15.rules.ewmac
-     data:
-         - "rawdata.get_daily_prices"
-         - "rawdata.daily_returns_volatility"
-     other_args: 
-         Lfast: 2
-         Lslow: 8
+    function: systems.provided.futures_chapter15.rules.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 2
+      Lslow: 8
   ewmac4_16:
-     function: systems.provided.futures_chapter15.rules.ewmac
-     data:
-         - "rawdata.get_daily_prices"
-         - "rawdata.daily_returns_volatility"
-     other_args: 
-         Lfast: 4
-         Lslow: 16
+    function: systems.provided.futures_chapter15.rules.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 4
+      Lslow: 16
   ewmac8_32:
-     function: systems.provided.futures_chapter15.rules.ewmac
-     data:
-         - "rawdata.get_daily_prices"
-         - "rawdata.daily_returns_volatility"
-     other_args: 
-         Lfast: 8
-         Lslow: 32
+    function: systems.provided.futures_chapter15.rules.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 8
+      Lslow: 32
   ewmac16_64:
-     function: systems.provided.futures_chapter15.rules.ewmac
-     data:
-         - "rawdata.get_daily_prices"
-         - "rawdata.daily_returns_volatility"
-     other_args: 
-         Lfast: 16
-         Lslow: 64
+    function: systems.provided.futures_chapter15.rules.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 16
+      Lslow: 64
   ewmac32_128:
-     function: systems.provided.futures_chapter15.rules.ewmac
-     data:
-         - "rawdata.get_daily_prices"
-         - "rawdata.daily_returns_volatility"
-     other_args: 
-         Lfast: 32
-         Lslow: 128
+    function: systems.provided.futures_chapter15.rules.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 32
+      Lslow: 128
   ewmac64_256:
-     function: systems.provided.futures_chapter15.rules.ewmac
-     data:
-         - "rawdata.get_daily_prices"
-         - "rawdata.daily_returns_volatility"
-     other_args: 
-         Lfast: 64
-         Lslow: 256
+    function: systems.provided.futures_chapter15.rules.ewmac
+    data:
+      - "rawdata.get_daily_prices"
+      - "rawdata.daily_returns_volatility"
+    other_args:
+      Lfast: 64
+      Lslow: 256
   carry:
-     function: systems.provided.futures_chapter15.rules.carry2
-     data:
-         - "rawdata.raw_carry"
-     other_args:
-         smooth_days: 90
+    function: systems.provided.futures_chapter15.rules.carry2
+    data:
+      - "rawdata.raw_carry"
+    other_args:
+      smooth_days: 90
 #
-use_forecast_scale_estimates: True
+use_forecast_scale_estimates: true
 #
 forecast_scalar_estimate:
-   pool_instruments: True
+  pool_instruments: true
 #
 # forecast combination
 #
-use_forecast_weight_estimates: True
-use_forecast_div_mult_estimates: True
+use_forecast_weight_estimates: true
+use_forecast_div_mult_estimates: true
 #
 #
-rule_variations: ['ewmac16_64','ewmac32_128', 'ewmac64_256', 'carry']
+rule_variations: ['ewmac16_64', 'ewmac32_128', 'ewmac64_256', 'carry']
 #
 #
 forecast_correlation_estimate:
-   pool_instruments: True
+  pool_instruments: true
 #
-use_instrument_weight_estimates: True
-use_instrument_div_mult_estimates: True
+use_instrument_weight_estimates: true
+use_instrument_div_mult_estimates: true
 #
 #
 #
@@ -90,5 +91,4 @@ base_currency: "USD"
 #
 # Portfolio creation
 #
-instruments: ['EDOLLAR','US10','EUROSTX', 'MXP', 'CORN', 'V2X']
-
+instruments: ['EDOLLAR', 'US10', 'EUROSTX', 'MXP', 'CORN', 'V2X']
