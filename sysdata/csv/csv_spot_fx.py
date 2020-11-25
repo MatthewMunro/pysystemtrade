@@ -15,9 +15,10 @@ FX_PRICES_DIRECTORY = "data.futures.fx_prices_csv"
 @dataclass
 class ConfigCsvFXPrices:
     """
-        :param price_column: Column where spot FX prices are
+            :param price_column: Column where spot FX prices are
         :param date_column: Column where dates are
         :param date_format: Format for dates https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior
+
     """
     date_column: str = "DATETIME"
     date_format: str = DEFAULT_DATE_FORMAT
