@@ -7,7 +7,9 @@ import os
 
 import pandas as pd
 
-from sysdata.base_data import simData
+from syscore.objects import arg_not_supplied
+from sysdata.base_data import baseData
+from sysdata.sim_data import simData
 from sysdata.futures.futuresDataForSim import (
     futuresAdjustedPriceData,
     futuresConfigDataForSim,
@@ -18,13 +20,15 @@ from sysdata.csv.csv_adjusted_prices import csvFuturesAdjustedPricesData
 from sysdata.csv.csv_spot_fx import csvFxPricesData
 from sysdata.csv.csv_instrument_data import csvFuturesInstrumentData
 
+from sysdata.data_blob import dataBlob
+
 """
 Static variables to store location of data
 """
 
 
 class csvPaths(simData):
-    def __init__(self, override_datapath=None, datapath_dict={}):
+    def __init__(self, override_datapath=arg_not_supplied, datapath_dict={}):
         """
 
         We look for data in .csv files
@@ -44,10 +48,10 @@ class csvPaths(simData):
         setattr(self, "_override_datapath", override_datapath)
         setattr(self, "_datapath_dict", datapath_dict)
 
-    def _resolve_path(self, path_attr_name, fallback_path=None):
+    def _resolve_path(self, path_attr_name, fallback_path=arg_not_supplied):
 
         # a global 'datapath' overrides everything
-        if self._override_datapath is not None:
+        if self._override_datapath is not arg_not_supplied:
             return self._override_datapath
 
         # if a specific path is provided use that
@@ -292,6 +296,34 @@ You could modify this to mix and match csv and non csv data
 But you might need a custom __init__
 """
 
+# simData?
+class NEWcsvFuturesSimData(baseData):
+    def keys(self):
+        return self.get_instrument_list()
+
+    def get_raw_price(self, instrument_code: str):
+        pass
+
+    def daily_prices(self, instrument_code: str):
+        pass
+
+    def get_instrument_list(self) -> list:
+        pass
+
+    def get_value_of_block_price_move(self, instrument_code) -> float:
+        pass
+
+    def get_instrument_currency(self):
+        pass
+
+    def get_fx_for_instrument(self):
+        pass
+
+    def get_instrument_raw_carry_data(self):
+        pass
+
+    def get_raw_cost_data(self):
+        pass
 
 class csvFuturesSimData(
     csvFXData,

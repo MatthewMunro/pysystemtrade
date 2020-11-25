@@ -1,14 +1,9 @@
-# Get all the data we need to run production code
-# Stick in a standard 'blob', so the names are common
-
 from copy import copy
 
 from sysbrokers.IB.ib_connection import connectionIB
-
-from sysdata.mongodb.mongo_connection import mongoDb
-
-from sysdata.mongodb.mongo_log import logToMongod as logger
 from syscore.objects import arg_not_supplied
+from sysdata.mongodb.mongo_connection import mongoDb
+from sysdata.mongodb.mongo_log import logToMongod as logger
 
 
 class dataBlob(object):
@@ -175,14 +170,15 @@ class dataBlob(object):
         class_name = get_class_name(class_object)
         csv_data_paths = self.csv_data_paths
         if csv_data_paths is arg_not_supplied:
-            raise Exception(
-                "Need csv_data_paths dict for class name %s" % class_name
-            )
+            self.log.warn("No datapaths provided for .csv, will use defaults  (may break in production, should be fine in sim)")
+            return arg_not_supplied
+
         datapath = csv_data_paths.get(class_name, "")
         if datapath == "":
-            raise Exception(
-                "Need to have key %s in csv_data_paths" %
+            self.log.warn(
+                "No key for %s in csv_data_paths, will use defaults (may break in production, should be fine in sim)" %
                 class_name)
+            return arg_not_supplied
 
         return datapath
 
@@ -273,7 +269,6 @@ class dataBlob(object):
         return log_name
 
 
-
 source_dict = dict(arctic="db", mongo="db", csv="db", ib="broker")
 
 
@@ -322,6 +317,7 @@ def camel_case_split(str):
             words[-1].append(c)
 
     return ["".join(word) for word in words]
+
 
 def get_class_name(class_object):
     return class_object.__name__
